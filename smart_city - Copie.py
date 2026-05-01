@@ -1,34 +1,40 @@
 import streamlit as st
 import pandas as pd
+from PIL import Image
 
 st.set_page_config(page_title="Rabat Smart City", layout="centered")
 
 st.components.v1.html("""
     <script>
-    const options = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            const { latitude, longitude } = pos.coords;
             window.parent.postMessage({
                 type: 'streamlit:setComponentValue',
-                value: {lat: latitude, lon: longitude}
+                value: {lat: pos.coords.latitude, lon: pos.coords.longitude}
             }, '*');
         },
-        (err) => { console.warn('GPS Error', err); },
-        options
+        (err) => { console.error(err); },
+        { enableHighAccuracy: true }
     );
     </script>
 """, height=0)
 
 st.title(" Plateforme Smart City - Rabat")
-st.write("Signalement des incidents et analyse des zones à risque")
 
-if 'location' not in st.session_state:
-    st.session_state.location = None
-
-uploaded_file = st.file_uploader("Charger une image de l'incident (JPG/JPEG)", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Étape 1: Charger une image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
-    st.image(uploaded_file, use_container_width=True)
-    if st.button(" Confirmer et Envoyer le Signalement"):
-        st.success("Position capturée et signalement envoyé avec succès !")
+    img = Image.open(uploaded_file)
+    img.thumbnail((800, 800)) 
+    st.image(img, caption="Aperçu optimisé", use_container_width=True)
+
+st.write("---")
+st.write("### Étape 2: Localisation")
+if st.button(" Cliquer ici pour valider votre Position GPS"):
+    st.info("Veuillez autoriser l'accès à la position dans votre navigateur.")
+
+if st.button(" Envoyer le Signalement"):
+    if uploaded_file:
+        st.success("Signalement envoyé avec succès à la commune de Rabat !")
+    else:
+        st.error("Veuillez d'abord charger une photo.")
