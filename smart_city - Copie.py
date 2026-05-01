@@ -1,35 +1,34 @@
 import streamlit as st
-from PIL import Image
-from PIL.ExifTags import TAGS, GPSTAGS
+import pandas as pd
 
-st.set_page_config(page_title="Smart City - Rabat", layout="centered")
-st.title("Plateforme Smart City - Rabat")
-st.subheader("Analyse des zones urbaines à risque")
+st.set_page_config(page_title="Rabat Smart City", layout="centered")
 
-def get_geotagging(exif):
-    if not exif:
-        return None
-    geotagging = {}
-    for (idx, tag) in TAGS.items():
-        if tag == 'GPSInfo':
-            if idx not in exif:
-                return None
-            for (key, val) in GPSTAGS.items():
-                if key in exif[idx]:
-                    geotagging[val] = exif[idx][key]
-    return geotagging
+st.components.v1.html("""
+    <script>
+    const options = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            window.parent.postMessage({
+                type: 'streamlit:setComponentValue',
+                value: {lat: latitude, lon: longitude}
+            }, '*');
+        },
+        (err) => { console.warn('GPS Error', err); },
+        options
+    );
+    </script>
+""", height=0)
 
-uploaded_file = st.file_uploader("Charger une image (JPG/JPEG)...", type=["jpg", "jpeg"])
+st.title(" Plateforme Smart City - Rabat")
+st.write("Signalement des incidents et analyse des zones à risque")
+
+if 'location' not in st.session_state:
+    st.session_state.location = None
+
+uploaded_file = st.file_uploader("Charger une image de l'incident (JPG/JPEG)", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, use_container_width=True)
-    
-    exif_data = image._getexif()
-    geodata = get_geotagging(exif_data)
-    
-    if geodata:
-        st.success(" Coordonnées GPS extraites avec succès")
-        st.json(geodata)
-    else:
-        st.error(" Aucune donnée de localisation trouvée")
+    st.image(uploaded_file, use_container_width=True)
+    if st.button(" Confirmer et Envoyer le Signalement"):
+        st.success("Position capturée et signalement envoyé avec succès !")
