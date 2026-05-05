@@ -1,3 +1,6 @@
 streamlit
-streamlit_js_eval
+torch
+torchvision
 pillow
+numpy
+pandas
