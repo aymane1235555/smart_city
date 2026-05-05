@@ -6,7 +6,7 @@ from PIL import Image
 import torchvision.transforms as T
 
 st.set_page_config(page_title="Irfan Locator", layout="wide")
-st.title("📍 Localisateur Visuel - Cité Al Irfan")
+st.title("Localisateur Visuel - Cité Al Irfan")
 
 @st.cache_resource
 def load_model():
@@ -44,20 +44,26 @@ if uploaded_file is not None:
         with torch.no_grad():
             query_feat = model(img_t).cpu().numpy().flatten().astype(np.float32)
         
-        # حل القوة الضاربة: حساب المسافة لكل عنصر يدوياً لتفادي أي تعارض في الأبعاد
+    
         distances = []
         for f in features:
             f_clean = np.array(f).flatten().astype(np.float32)
-            # التأكد من تطابق الحجم قبل الحساب
+        
             if f_clean.shape == query_feat.shape:
                 dist = np.linalg.norm(f_clean - query_feat)
                 distances.append(dist)
             else:
-                distances.append(float('inf')) # تجاهل إذا كان الحجم تالفاً
+                distances.append(float('inf')) 
         
         best_match_idx = np.argmin(distances)
         matched_img_name = names[best_match_idx]
         location = df[df['image_id'] == matched_img_name].iloc[0]
         
-        st.info(f"📍 Coordonnées : {location['latitude']}, {location['longitude']}")
-        st.map(pd.DataFrame({'lat': [location['latitude']], 'lon': [location['longitude']]}))
+        st.info(f" Coordonnées : {lat}, {lon}")
+        
+        google_maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+        
+        st.link_button(" Google Maps", google_maps_url, type="primary")
+        
+        map_df = pd.DataFrame({'lat': [lat], 'lon': [lon]})
+        st.map(map_df)
