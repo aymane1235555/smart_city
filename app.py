@@ -57,10 +57,7 @@ if uploaded_file is not None:
         
         THRESHOLD = 20.0
         
-        if best_distance > THRESHOLD:
-            st.error(f"❌ Image non reconnue comme faisant partie de la Cité Al Irfan.")
-            st.warning("Veuillez fournir une photo réelle du quartier.")
-            st.stop()
+        
             
         matched_img_name = names[best_match_idx]
         location = df[df['image_id'] == matched_img_name].iloc[0]
