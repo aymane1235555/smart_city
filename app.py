@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="Irfan Visual Locator", layout="centered")
 
-st.title("Localisateur Visuel - Cité Al Irfan")
+st.title("📍 Localisateur Visuel - Cité Al Irfan")
 st.write("Système de positionnement par IA (DINOv2 + AnyLoc)")
 
 @st.cache_resource
@@ -27,9 +27,9 @@ def load_data():
 try:
     model = load_model()
     features, names, df = load_data()
-    st.success("Base de données chargée !")
+    st.success("✅ Base de données chargée !")
 except Exception as e:
-    st.error(f"Erreur : {e}")
+    st.error(f"Erreur de chargement : {e}")
 
 uploaded_file = st.file_uploader("Choisir une photo...", type=['jpg', 'jpeg', 'png'])
 
@@ -37,7 +37,7 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
     st.image(image, use_container_width=True)
     
-    with st.spinner('Analyse...'):
+    with st.spinner('Analyse en cours...'):
         transform = T.Compose([
             T.Resize(224),
             T.CenterCrop(224),
@@ -48,9 +48,9 @@ if uploaded_file is not None:
         
         with torch.no_grad():
             query_feat = model(img_t).cpu().numpy().reshape(1, -1)
-
-        db_features = features.reshape(len(features),-1)
-         
+        
+        db_features = features.reshape(len(features), -1)
+        
         distances = np.linalg.norm(db_features - query_feat, axis=1)
         best_match_idx = np.argmin(distances)
         
@@ -58,11 +58,11 @@ if uploaded_file is not None:
         location = df[df['image_id'] == matched_img_name].iloc[0]
         lat, lon = location['latitude'], location['longitude']
         
-        st.subheader("Résultat")
+        st.subheader("🎯 Résultat")
         st.info(f"Coordonnées : {lat}, {lon}")
         
         maps_url = f"https://www.google.com/maps?q={lat},{lon}"
-        st.markdown(f"### [ Google Maps]({maps_url})")
+        st.markdown(f"### [🌍 Ouvrir dans Google Maps]({maps_url})")
         
         map_df = pd.DataFrame({'lat': [lat], 'lon': [lon]})
         st.map(map_df)
