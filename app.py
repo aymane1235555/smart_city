@@ -1,9 +1,9 @@
 import streamlit as st
-import torch # type: ignore
+import torch
 import numpy as np
 import pandas as pd
 from PIL import Image
-import torchvision.transforms as T # type: ignore
+import torchvision.transforms as T
 import os
 
 st.set_page_config(page_title="Irfan Visual Locator", layout="centered")
@@ -47,7 +47,7 @@ if uploaded_file is not None:
         img_t = transform(image).unsqueeze(0)
         
         with torch.no_grad():
-            query_feat = model(img_t).numpy()
+            query_feat = model(img_t).cpu().numpy().flatten()
         
         distances = np.linalg.norm(features - query_feat, axis=1)
         best_match_idx = np.argmin(distances)
