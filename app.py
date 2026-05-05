@@ -47,9 +47,11 @@ if uploaded_file is not None:
         img_t = transform(image).unsqueeze(0)
         
         with torch.no_grad():
-            query_feat = model(img_t).cpu().numpy().flatten()
-        
-        distances = np.linalg.norm(features - query_feat, axis=1)
+            query_feat = model(img_t).cpu().numpy().reshape(1, -1)
+
+        db_features = features.reshape(len(features),-1)
+         
+        distances = np.linalg.norm(db_features - query_feat, axis=1)
         best_match_idx = np.argmin(distances)
         
         matched_img_name = names[best_match_idx]
