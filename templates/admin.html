@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr" id="admin-html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Administration - Gestion des Risques Urbains</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #13242C;
+            --ink-2: #1B3640;
+            --sand: #F4EEE2;
+            --sand-2: #EAE0CC;
+            --line: #DCD2BA;
+            --clay: #BF5B2E;
+            --clay-light: #E08A53;
+            --teal: #296F78;
+            --teal-light: #DCEEEF;
+            --ochre: #C0852A;
+            --olive: #5C7A4C;
+            --brick: #A8392F;
+            --text: #1E2730;
+            --text-soft: #5C6670;
+            --card: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { font-family: 'Inter', sans-serif; background: var(--sand); margin: 0; padding: 0; color: var(--text); }
+        html[dir="rtl"] body { font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif; }
+
+        .display { font-family: 'Fraunces', serif; }
+        html[dir="rtl"] .display { font-family: 'IBM Plex Sans Arabic', serif; font-weight: 700; }
+
+        .hero { position: relative; height: 280px; overflow: hidden; }
+        .banner-container, .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        .hero-img { object-fit: cover; display: block; filter: saturate(0.85) brightness(0.92); }
+        .hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,36,44,0.15) 0%, rgba(19,36,44,0.55) 55%, rgba(15,28,34,0.94) 100%); z-index: 2; }
+
+        .hero-top { position: absolute; top: 18px; inset-inline-end: 28px; z-index: 3; }
+        .lang-select { padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(244,238,226,0.35); background: rgba(244,238,226,0.08); color: var(--sand); font-size: 13px; font-weight: 600; cursor: pointer; backdrop-filter: blur(2px); }
+        .lang-select option { color: var(--text); }
+
+        .hero-content { position: absolute; bottom: 26px; inset-inline-start: 32px; inset-inline-end: 32px; z-index: 3; color: var(--sand); }
+        .eyebrow { display: block; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--clay-light); font-weight: 700; margin-bottom: 10px; }
+        .hero-content h1 { margin: 0; font-size: 30px; font-weight: 600; line-height: 1.18; }
+        .hero-content p { margin: 10px 0 0; font-size: 14px; color: #D7CFC0; max-width: 580px; line-height: 1.5; }
+
+        .motif-divider { height: 6px; background: linear-gradient(90deg, var(--clay) 0 25%, var(--teal) 25% 50%, var(--ochre) 50% 75%, var(--olive) 75% 100%); }
+
+        .page-content { padding: 28px 36px 40px; max-width: 1400px; margin: 0 auto; }
+
+        .stats-strip { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-card { flex: 1; min-width: 150px; background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--ink-2); border-radius: 10px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
+        .stat-card.stat-waiting { border-top-color: var(--ochre); }
+        .stat-card.stat-progress { border-top-color: var(--teal); }
+        .stat-card.stat-resolved { border-top-color: var(--olive); }
+        .stat-number { font-size: 30px; font-weight: 600; color: var(--ink-2); }
+        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--text-soft); }
+
+        .grid { display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 24px; }
+
+        .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 22px; box-shadow: 0 1px 3px rgba(19,36,44,0.05); }
+        .panel-eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); font-weight: 700; margin: 0 0 14px; }
+
+        #map { height: 500px; border-radius: 8px; border: 1px solid var(--line); }
+        
+        .leaflet-heatmap-layer, .leaflet-pane canvas { 
+            opacity: 1 !important; 
+            filter: saturate(2.5) contrast(1.4) drop-shadow(0px 0px 4px rgba(255, 0, 0, 0.6)) !important;
+        }
+
+        .map-legend { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 11px; color: var(--text-soft); }
+        .legend-bar { flex: 1; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #00ebff, #ffea00, #ff6a00, #ff0000); }
+
+        .table-container { overflow-x: auto; }
+        .table-container h3 { margin: 0 0 16px; font-size: 18px; color: var(--ink-2); border-bottom: 1px solid var(--line); padding-bottom: 14px; font-weight: 600; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: start; border-bottom: 1px solid var(--line); font-size: 13px; vertical-align: middle; }
+        th { background: var(--sand-2); color: var(--ink-2); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        tbody tr:hover { background: #FBF8F0; }
+
+        .badge { padding: 5px 10px; border-radius: 20px; font-weight: 600; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
+        .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+        .badge-waiting { background: #F4E3C4; color: #8A5D17; }
+        .badge-progress { background: #DCEEEF; color: #1F565D; }
+        .badge-resolved { background: #E2EAD9; color: #41562F; }
+        .badge-eval-true { background: #DCEEEF; color: #1F565D; border: 1px solid #BFE0E2; }
+        .badge-eval-false { background: #F3DAD6; color: #8A2E25; border: 1px solid #E7BDB6; }
+
+        .report-img { width: 70px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); transition: transform 0.2s ease; }
+        .report-img:hover { transform: scale(1.06); }
+
+        select { padding: 6px 10px; border-radius: 6px; font-size: 12px; border: 1px solid var(--line); background: #fff; color: var(--text); }
+
+        .btn-submit, .btn-correct, .btn-incorrect { border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: opacity 0.2s ease; }
+        .btn-submit:hover, .btn-correct:hover, .btn-incorrect:hover { opacity: 0.88; }
+        .btn-submit { background: var(--ink-2); color: var(--sand); }
+        .btn-correct { background: var(--teal); color: #fff; }
+        .btn-incorrect { background: var(--brick); color: #fff; }
+        .eval-actions { display: flex; gap: 6px; }
+
+        @media (max-width: 920px) {
+            .grid { grid-template-columns: 1fr; }
+            .hero { height: 240px; }
+            .hero-content h1 { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    {% set total_reports = reports|length %}
+    {% set waiting_count = reports|selectattr("status", "equalto", "En attente")|list|length %}
+    {% set progress_count = reports|selectattr("status", "equalto", "En cours")|list|length %}
+    {% set resolved_count = reports|selectattr("status", "equalto", "Résolu")|list|length %}
+
+    <header class="hero">
+        <div class="banner-container">
+            <img src="/static/rabat-banner.jpg?v=2" class="hero-img" alt="Rabat City">
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-top">
+            <select class="lang-select" id="langSelect" onchange="switchLanguage(this.value)">
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+            </select>
+        </div>
+        <div class="hero-content">
+            <span class="eyebrow" id="lbl-eyebrow">PLATEFORME IA — DÉTECTION DES RISQUES URBAINS</span>
+            <h1 class="display" id="lbl-admin-title">Console de Supervision Métropolitaine</h1>
+            
+        </div>
+    </header> 
+    <div class="motif-divider"></div>
+
+    <div class="page-content">
+
+        <div class="stats-strip">
+            <div class="stat-card stat-total">
+                <span class="stat-number">{{ total_reports }}</span>
+                <span class="stat-label" id="lbl-stat-total-label">Signalements totaux</span>
+            </div>
+            <div class="stat-card stat-waiting">
+                <span class="stat-number">{{ waiting_count }}</span>
+                <span class="stat-label" id="lbl-stat-waiting-label">En attente</span>
+            </div>
+            <div class="stat-card stat-progress">
+                <span class="stat-number">{{ progress_count }}</span>
+                <span class="stat-label" id="lbl-stat-progress-label">En cours</span>
+            </div>
+            <div class="stat-card stat-resolved">
+                <span class="stat-number">{{ resolved_count }}</span>
+                <span class="stat-label" id="lbl-stat-resolved-label">Résolu</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="panel map-panel">
+                <p class="panel-eyebrow" id="lbl-map-eyebrow">CARTE DE CHALEUR — ZONES ACTIVES</p>
+                <div id="map"></div>
+                <div class="map-legend">
+                    <span id="lbl-legend-low">Faible densité</span>
+                    <span class="legend-bar"></span>
+                    <span id="lbl-legend-high">Densité élevée</span>
+                </div>
+            </div>
+
+            <div class="panel table-container">
+                <p class="panel-eyebrow" id="lbl-table-eyebrow">FLUX EN DIRECT</p>
+                <h3 id="lbl-table-header">Flux des Déclarations</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th id="th-img">Visuel</th>
+                            <th id="th-details">Détails Rapport</th>
+                            <th id="th-state">Statut</th>
+                            <th id="th-action">Action</th>
+                            <th id="th-ia">Précision IA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td>
+                                <a href="/{{ report.image_path }}" target="_blank">
+                                    <img src="/{{ report.image_path }}" class="report-img">
+                                </a>
+                            </td>
+                            <td>
+                                <span style="font-weight: 600; color: var(--ink-2);">{{ report.email }}</span><br>
+                                <span style="color: var(--text-soft); font-size: 12px;">{{ report.description }}</span>
+                            </td>
+                            <td>
+                                {% if report.status == 'En attente' %}
+                                <span class="badge badge-waiting state-w">En attente</span>
+                                {% elif report.status == 'En cours' %}
+                                <span class="badge badge-progress state-p">En cours</span>
+                                {% else %}
+                                <span class="badge badge-resolved state-r">Résolu</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="/update-status/{{ report.id }}" method="post" style="display:flex; gap:4px;">
+                                    <select name="status">
+                                        <option value="En attente" {% if report.status == 'En attente' %}selected{% endif %} class="opt-w">En attente</option>
+                                        <option value="En cours" {% if report.status == 'En cours' %}selected{% endif %} class="opt-p">En cours</option>
+                                        <option value="Résolu" {% if report.status == 'Résolu' %}selected{% endif %} class="opt-r">Résolu</option>
+                                    </select>
+                                    <button type="submit" class="btn-submit lbl-btn-ok">Valider</button>
+                                </form>
+                            </td>
+                            <td>
+                                {% if report.ai_evaluation == 'Non évalué' %}
+                                <div class="eval-actions">
+                                    <form action="/evaluate-ai/{{ report.id }}" method="post">
+                                        <input type="hidden" name="evaluation" value="Correct">
+                                        <button type="submit" class="btn-correct lbl-btn-true">Conforme</button>
+                                    </form>
+                                    <form action="/evaluate-ai/{{ report.id }}" method="post">
+                                        <input type="hidden" name="evaluation" value="Incorrect">
+                                        <button type="submit" class="btn-incorrect lbl-btn-false">Erreur</button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <span class="badge {% if report.ai_evaluation == 'Correct' %}badge-eval-true eval-text-true{% else %}badge-eval-false eval-text-false{% endif %}">
+                                    {% if report.ai_evaluation == 'Correct' %}Conforme{% else %}Erreur de détection{% endif %}
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+
+    <script>
+        var map = L.map('map').setView([34.0208, -6.8416], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        setTimeout(function(){ map.invalidateSize(); }, 400);
+
+        const translations = {
+            fr: {
+                title: "Console de Supervision Métropolitaine",
+                eyebrow: "DÉTECTION DES RISQUES URBAINS DE RABAT VILLE",
+                mapEyebrow: "CARTE DE CHALEUR",
+                tableEyebrow: "FLUX EN DIRECT",
+                legendLow: "Faible densité",
+                legendHigh: "Densité élevée",
+                statTotal: "Signalements totaux",
+                statWaiting: "En attente",
+                statProgress: "En cours",
+                statResolved: "Résolu",
+                tblHeader: "Flux des Déclarations",
+                tImg: "Visuel", tDet: "Détails Rapport", tState: "Statut", tAct: "Action", tIa: "Précision IA",
+                btnOk: "Valider", btnTrue: "Conforme", btnFalse: "Erreur",
+                w: "En attente", p: "En cours", r: "Résolu",
+                evalTrue: "Conforme", evalFalse: "Erreur de détection"
+            },
+            ar: {
+                title: "لوحة التحكم والرقابة الحضرية",
+                eyebrow: "منصة رصد المخاطر الحضرية لمدينة الرباط",
+                mapEyebrow: "خريطة الكثافة",
+                tableEyebrow: "البلاغات المباشرة",
+                legendLow: "كثافة منخفضة",
+                legendHigh: "كثافة مرتفعة",
+                statTotal: "إجمالي البلاغات",
+                statWaiting: "قيد الانتظار",
+                statProgress: "في طور المعالجة",
+                statResolved: "تم حلها",
+                tblHeader: "تدفق البلاغات الواردة",
+                tImg: "المعاينة", tDet: "تفاصيل البلاغ", tState: "الحالة", tAct: "إجراء", tIa: "دقة الذكاء الاصطناعي",
+                btnOk: "تأكيد", btnTrue: "صحيح", btnFalse: "خاطئ",
+                w: "قيد الانتظار", p: "في طور المعالجة", r: "تم الحل",
+                evalTrue: "تأكيد دقة الذكاء الاصطناعي", evalFalse: "خطأ في الرصد"
+            }
+        };
+
+        function switchLanguage(lang) {
+            const html = document.getElementById('admin-html');
+            html.setAttribute('lang', lang);
+            html.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+            document.getElementById('lbl-admin-title').innerText = translations[lang].title;
+            
+            document.getElementById('lbl-eyebrow').innerText = translations[lang].eyebrow;
+            document.getElementById('lbl-map-eyebrow').innerText = translations[lang].mapEyebrow;
+            document.getElementById('lbl-table-eyebrow').innerText = translations[lang].tableEyebrow;
+            document.getElementById('lbl-legend-low').innerText = translations[lang].legendLow;
+            document.getElementById('lbl-legend-high').innerText = translations[lang].legendHigh;
+            document.getElementById('lbl-stat-total-label').innerText = translations[lang].statTotal;
+            document.getElementById('lbl-stat-waiting-label').innerText = translations[lang].statWaiting;
+            document.getElementById('lbl-stat-progress-label').innerText = translations[lang].statProgress;
+            document.getElementById('lbl-stat-resolved-label').innerText = translations[lang].statResolved;
+            document.getElementById('lbl-table-header').innerText = translations[lang].tblHeader;
+            document.getElementById('th-img').innerText = translations[lang].tImg;
+            document.getElementById('th-details').innerText = translations[lang].tDet;
+            document.getElementById('th-state').innerText = translations[lang].tState;
+            document.getElementById('th-action').innerText = translations[lang].tAct;
+            document.getElementById('th-ia').innerText = translations[lang].tIa;
+
+            document.querySelectorAll('.lbl-btn-ok').forEach(el => el.innerText = translations[lang].btnOk);
+            document.querySelectorAll('.lbl-btn-true').forEach(el => el.innerText = translations[lang].btnTrue);
+            document.querySelectorAll('.lbl-btn-false').forEach(el => el.innerText = translations[lang].btnFalse);
+
+            document.querySelectorAll('.state-w, .opt-w').forEach(el => el.innerText = translations[lang].w);
+            document.querySelectorAll('.state-p, .opt-p').forEach(el => el.innerText = translations[lang].p);
+            document.querySelectorAll('.state-r, .opt-r').forEach(el => el.innerText = translations[lang].r);
+
+            document.querySelectorAll('.eval-text-true').forEach(el => el.innerText = translations[lang].evalTrue);
+            document.querySelectorAll('.eval-text-false').forEach(el => el.innerText = translations[lang].evalFalse);
+
+            localStorage.setItem('adminLang', lang);
+
+            setTimeout(function() {
+                if (typeof map !== 'undefined') {
+                    map.invalidateSize();
+                }
+            }, 100);
+        }
+
+        window.onload = () => {
+            const savedLang = localStorage.getItem('adminLang') || 'fr';
+            document.getElementById('langSelect').value = savedLang;
+            switchLanguage(savedLang);
+        };
+
+        var heatPoints = [
+            {% for report in reports %}
+                {% if report.status != 'Résolu' %}
+                    [{{ report.latitude }}, {{ report.longitude }}, 1.0],
+                {% endif %}
+            {% endfor %}
+        ];
+
+        if (heatPoints.length > 0) {
+            L.heatLayer(heatPoints, {
+                radius: 25,
+                blur: 12,
+                maxZoom: 13,
+                max: 0.5,
+                gradient: { 
+                    0.2: '#00ebff', 
+                    0.5: '#ffea00', 
+                    0.8: '#ff6a00', 
+                    1.0: '#ff0000' 
+                }
+            }).addTo(map);
+        }
+    </script>
+</body>
+</html>

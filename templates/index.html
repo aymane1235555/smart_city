@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr" id="page-html" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plateforme Citoyenne - Sécurité Urbaine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+    <style>
+        :root {
+            --ink: #13242C;
+            --ink-2: #1B3640;
+            --sand: #F4EEE2;
+            --sand-2: #EAE0CC;
+            --line: #DCD2BA;
+            --clay: #BF5B2E;
+            --clay-light: #E08A53;
+            --teal: #296F78;
+            --teal-light: #DCEEEF;
+            --ochre: #C0852A;
+            --olive: #5C7A4C;
+            --brick: #A8392F;
+            --text: #1E2730;
+            --text-soft: #5C6670;
+            --card: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { font-family: 'Inter', sans-serif; background: var(--sand); margin: 0; padding: 0; color: var(--text); }
+        html[dir="rtl"] body { font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif; }
+
+        .hero { position: relative; height: 240px; overflow: hidden; }
+        .banner-container, .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        .hero-img { object-fit: cover; display: block; filter: saturate(0.85) brightness(0.92); }
+        .hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,36,44,0.15) 0%, rgba(19,36,44,0.55) 55%, rgba(15,28,34,0.94) 100%); z-index: 2; }
+
+        .hero-top { position: absolute; top: 18px; inset-inline-end: 28px; z-index: 3; }
+        .lang-select { padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(244,238,226,0.35); background: rgba(244,238,226,0.08); color: var(--sand); font-size: 13px; font-weight: 600; cursor: pointer; backdrop-filter: blur(2px); }
+        .lang-select option { color: var(--text); }
+
+        .hero-content { position: absolute; bottom: 26px; inset-inline-start: 32px; inset-inline-end: 32px; z-index: 3; color: var(--sand); }
+        .eyebrow { display: block; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--clay-light); font-weight: 700; margin-bottom: 8px; }
+        .hero-content h2 { margin: 0; font-size: 28px; font-weight: 600; border: none; padding: 0; color: var(--sand); }
+
+        .motif-divider { height: 6px; background: linear-gradient(90deg, var(--clay) 0 25%, var(--teal) 25% 50%, var(--ochre) 50% 75%, var(--olive) 75% 100%); }
+
+        .page-content { padding: 28px 36px 40px; max-width: 1200px; margin: 0 auto; }
+
+        .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 18px 24px; border-radius: 10px; margin-bottom: 24px; border: 1px solid var(--line); border-inline-start: 4px solid var(--teal); box-shadow: 0 1px 3px rgba(19,36,44,0.04); }
+        .user-info { font-size: 14px; color: var(--ink-2); font-weight: 600; }
+        .user-info span { color: var(--text-soft); font-weight: 400; }
+        .trust-score-container { text-align: end; }
+        .trust-score-badge { background: var(--teal-light); color: var(--teal); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; display: inline-block; }
+        .danger-zone { color: var(--brick); font-size: 11px; display: block; margin-top: 5px; font-weight: 500; }
+
+        .stats-grid { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-card { flex: 1; min-width: 180px; background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--ink-2); border-radius: 10px; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; text-align: start; }
+        .stat-card.stat-total { border-top-color: var(--ink-2); }
+        .stat-card.stat-pending { border-top-color: var(--ochre); }
+        .stat-card.stat-resolved { border-top-color: var(--olive); }
+        .stat-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--text-soft); }
+        .stat-value { font-size: 28px; font-weight: 600; color: var(--ink-2); margin: 0; display: block; }
+
+        .grid-layout { display: grid; grid-template-columns: 1.3fr 1.7fr; gap: 24px; }
+
+        .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(19,36,44,0.05); }
+        .panel h3 { margin: 0 0 18px; font-size: 16px; color: var(--ink-2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--sand-2); padding-bottom: 12px; }
+        .panel h3.danger-title { color: var(--brick); border-bottom-color: #F3DAD6; }
+
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--ink-2); font-size: 13px; }
+        textarea { width: 100%; height: 110px; padding: 12px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: 6px; box-sizing: border-box; resize: vertical; font-family: inherit; font-size: 13px; color: var(--text); background: #FDFDFB; }
+        textarea:focus { outline: none; border-color: var(--teal); }
+        
+        input[type="file"] { display: block; margin-bottom: 20px; font-size: 13px; color: var(--text-soft); width: 100%; padding: 10px; background: var(--sand); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+        
+        button { width: 100%; padding: 14px; background: var(--brick); color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600; transition: background 0.2s ease; }
+        button:hover { background: #8A2E25; }
+        
+        .status { margin-top: 14px; font-weight: 600; text-align: center; color: var(--ochre); font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 14px; text-align: start; border-bottom: 1px solid var(--line); font-size: 13px; }
+        th { background: var(--sand-2); color: var(--ink-2); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+        tbody tr:hover { background: #FBF8F0; }
+        
+        .badge { padding: 5px 10px; border-radius: 20px; font-weight: 600; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
+        .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .badge-waiting { background: #F4E3C4; color: #8A5D17; }
+        .badge-progress { background: #DCEEEF; color: #1F565D; }
+        .badge-resolved { background: #E2EAD9; color: #41562F; }
+
+        @media (max-width: 920px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            .hero { height: 200px; }
+            .hero-content h2 { font-size: 22px; }
+            .user-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .trust-score-container { text-align: start; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="hero">
+        <div class="banner-container">
+            <img src="/static/rabat-banner.jpg" class="hero-img" alt="Rabat City">
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-top">
+            <select class="lang-select" id="langSelect" onchange="switchLanguage(this.value)">
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+            </select>
+        </div>
+        <div class="hero-content">
+            <span class="eyebrow">ESPACE CITOYEN</span>
+            <h2 id="main-title">Portail de Signalement Citoyen</h2>
+        </div>
+    </header>
+    <div class="motif-divider"></div>
+
+    <div class="page-content">
+        
+        <div class="user-header">
+            <span class="user-info"><span id="lbl-id">Identifiant</span> : {{ email }}</span>
+            <div class="trust-score-container">
+                <span class="trust-score-badge"><span id="lbl-trust">Indice de fiabilité</span> : {{ trust_score }} / 100.0</span>
+                <span class="danger-zone" id="lbl-ban-policy">Clôture automatique du compte si l'indice est inférieur à 10.0</span>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card stat-total">
+                <span class="stat-title" id="lbl-stat-total">Total Signalements</span>
+                <span class="stat-value">{{ total }}</span>
+            </div>
+            <div class="stat-card stat-pending">
+                <span class="stat-title" id="lbl-stat-pending">En attente</span>
+                <span class="stat-value">{{ pending }}</span>
+            </div>
+            <div class="stat-card stat-resolved">
+                <span class="stat-title" id="lbl-stat-resolved">Résolus</span>
+                <span class="stat-value">{{ resolved }}</span>
+            </div>
+        </div>
+
+        <div class="grid-layout">
+            
+            <div class="panel">
+                <h3 id="lbl-form-title" class="danger-title">Déclarer un incident ou un risque urbain</h3>
+                <form action="/upload-report" method="post" enctype="multipart/form-data" id="reportForm">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <input type="hidden" name="latitude" id="lat">
+                    <input type="hidden" name="longitude" id="lng">
+                    
+                    <label id="lbl-input-desc">Description précise de la situation constatée :</label>
+                    <textarea name="description" id="input-desc-placeholder" placeholder="Veuillez décrire brièvement l'anomalie ou le danger observé..." required></textarea>
+                    
+                    <label id="lbl-input-file">Photographie de l'incident (uniquement prise via l'appareil photo) :</label>
+                    <input type="file" name="image" accept="image/*" required>
+                    
+                    <button type="submit" id="lbl-btn-submit">Transmettre le rapport d'urgence</button>
+                </form>
+                <div class="status" id="geoStatus"><i class="ri-loader-4-line ri-spin"></i> Géolocalisation en cours...</div>
+            </div>
+
+            <div class="panel table-container">
+                <h3 class="table-title" id="lbl-table-title">Historique de vos déclarations</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th id="th-date">Date d'enregistrement</th>
+                            <th id="th-coord">Coordonnées</th>
+                            <th id="th-desc">Description</th>
+                            <th id="th-status">Statut actuel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in user_reports %}
+                        <tr>
+                            <td>{{ report.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ report.latitude[:7] }}, {{ report.longitude[:7] }}</td>
+                            <td>{{ report.description }}</td>
+                            <td>
+                                {% if report.status == 'En attente' %}
+                                <span class="badge badge-waiting btn-state-waiting">En attente</span>
+                                {% elif report.status == 'En cours' %}
+                                <span class="badge badge-progress btn-state-progress">En cours</span>
+                                {% else %}
+                                <span class="badge badge-resolved btn-state-resolved">Résolu</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            fr: {
+                title: "Portail de Signalement Citoyen",
+                id: "Identifiant",
+                trust: "Indice de fiabilité",
+                ban: "Clôture automatique du compte si l'indice est inférieur à 10.0",
+                stTotal: "Total Signalements",
+                stPending: "En attente",
+                stResolved: "Résolus",
+                formTitle: "Déclarer un incident ou un risque urbain",
+                inpDesc: "Description précise de la situation constatée :",
+                holderDesc: "Veuillez décrire brièvement l'anomalie ou le danger observé...",
+                inpFile: "Photographie de l'incident (uniquement prise via l'appareil photo) :",
+                btnSub: "Transmettre le rapport d'urgence",
+                geo: "Géolocalisation en cours...",
+                tableTitle: "Historique de vos déclarations",
+                thDate: "Date d'enregistrement",
+                thCoord: "Coordonnées",
+                thDesc: "Description",
+                thStatus: "Statut actuel",
+                w: "En attente", p: "En cours", r: "Résolu"
+            },
+            ar: {
+                title: "بوابة تبليغ المواطنين",
+                id: "الحساب",
+                trust: "مؤشر المصداقية",
+                ban: "يتم إغلاق الحساب تلقائياً إذا قل المؤشر عن 10.0",
+                stTotal: "مجموع البلاغات",
+                stPending: "قيد الانتظار",
+                stResolved: "تم الحل",
+                formTitle: "التبليغ عن حادث أو خطر حضري",
+                inpDesc: "وصف دقيق للحالة المرصودة:",
+                holderDesc: "يرجى وصف الخطر أو المشكلة باختصار...",
+                inpFile: "صورة الحادث (يجب التقاطها مباشرة عبر الكاميرا):",
+                btnSub: "إرسال بلاغ المستعجلات",
+                geo: "جاري تحديد الموقع الجغرافي...",
+                tableTitle: "سجل بلاغاتك السابقة",
+                thDate: "تاريخ التسجيل",
+                thCoord: "الإحداثيات",
+                thDesc: "الوصف",
+                thStatus: "الحالة الحالية",
+                w: "قيد الانتظار", p: "في طور المعالجة", r: "تم الحل"
+            }
+        };
+
+        function switchLanguage(lang) {
+            const html = document.getElementById('page-html');
+            html.setAttribute('lang', lang);
+            html.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+            document.getElementById('main-title').innerText = translations[lang].title;
+            document.getElementById('lbl-id').innerText = translations[lang].id;
+            document.getElementById('lbl-trust').innerText = translations[lang].trust;
+            document.getElementById('lbl-ban-policy').innerText = translations[lang].ban;
+            document.getElementById('lbl-stat-total').innerText = translations[lang].stTotal;
+            document.getElementById('lbl-stat-pending').innerText = translations[lang].stPending;
+            document.getElementById('lbl-stat-resolved').innerText = translations[lang].stResolved;
+            document.getElementById('lbl-form-title').innerText = translations[lang].formTitle;
+            document.getElementById('lbl-input-desc').innerText = translations[lang].inpDesc;
+            document.getElementById('input-desc-placeholder').setAttribute('placeholder', translations[lang].holderDesc);
+            document.getElementById('lbl-input-file').innerText = translations[lang].inpFile;
+            document.getElementById('lbl-btn-submit').innerText = translations[lang].btnSub;
+            document.getElementById('lbl-table-title').innerText = translations[lang].tableTitle;
+            document.getElementById('th-date').innerText = translations[lang].thDate;
+            document.getElementById('th-coord').innerText = translations[lang].thCoord;
+            document.getElementById('th-desc').innerText = translations[lang].thDesc;
+            document.getElementById('th-status').innerText = translations[lang].thStatus;
+
+            document.querySelectorAll('.btn-state-waiting').forEach(el => el.innerText = translations[lang].w);
+            document.querySelectorAll('.btn-state-progress').forEach(el => el.innerText = translations[lang].p);
+            document.querySelectorAll('.btn-state-resolved').forEach(el => el.innerText = translations[lang].r);
+            
+            localStorage.setItem('selectedLang', lang);
+            updateGeoMessage(lang);
+        }
+
+        function updateGeoMessage(lang) {
+            const geoEl = document.getElementById('geoStatus');
+            if (geoEl.dataset.synced === "true") {
+                geoEl.innerHTML = lang === 'ar' 
+                    ? '<i class="ri-checkbox-circle-fill"></i> تم مزامنة إحداثيات GPS بنجاح' 
+                    : '<i class="ri-checkbox-circle-fill"></i> Coordonnées GPS synchronisées avec succès';
+            } else if (geoEl.dataset.error === "true") {
+                geoEl.innerHTML = lang === 'ar' 
+                    ? '<i class="ri-error-warning-fill"></i> خطأ: يرجى تفعيل تحديد الموقع.' 
+                    : '<i class="ri-error-warning-fill"></i> Erreur : Veuillez autoriser l\'accès à la localisation.';
+            } else {
+                geoEl.innerHTML = lang === 'ar'
+                    ? '<i class="ri-loader-4-line ri-spin"></i> جاري تحديد الموقع الجغرافي...'
+                    : '<i class="ri-loader-4-line ri-spin"></i> Géolocalisation en cours...';
+            }
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('lat').value = position.coords.latitude;
+                document.getElementById('lng').value = position.coords.longitude;
+                const geoEl = document.getElementById('geoStatus');
+                geoEl.dataset.synced = "true";
+                geoEl.style.color = "var(--olive)";
+                const curLang = localStorage.getItem('selectedLang') || 'fr';
+                updateGeoMessage(curLang);
+            }, function(error) {
+                const geoEl = document.getElementById('geoStatus');
+                geoEl.dataset.error = "true";
+                geoEl.style.color = "var(--brick)";
+                const curLang = localStorage.getItem('selectedLang') || 'fr';
+                updateGeoMessage(curLang);
+            });
+        }
+
+        window.onload = () => {
+            const savedLang = localStorage.getItem('selectedLang') || 'fr';
+            document.getElementById('langSelect').value = savedLang;
+            switchLanguage(savedLang);
+        };
+    </script>
+</body>
+</html>

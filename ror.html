@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Administration - Gestion des Risques Urbains</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #1e293b; }
+        .header { background: #1e293b; color: #ffffff; padding: 25px; border-radius: 6px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 0.5px; }
+        .header p { margin: 8px 0 0 0; font-size: 14px; opacity: 0.8; }
+        .grid { display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 25px; }
+        #map { height: 620px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #cbd5e1; }
+        .table-container { background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-x: auto; border: 1px solid #e2e8f0; }
+        .table-container h3 { margin-top: 0; font-size: 18px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 15px; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px; vertical-align: middle; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+        td { color: #334155; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; display: inline-block; }
+        .badge-waiting { background: #fef3c7; color: #d97706; }
+        .badge-progress { background: #e0f2fe; color: #0369a1; }
+        .badge-resolved { background: #dcfce7; color: #15803d; }
+        .badge-eval-true { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .badge-eval-false { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .report-img { width: 65px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; transition: transform 0.2s; }
+        .report-img:hover { transform: scale(1.05); }
+        select { padding: 6px; border-radius: 4px; font-size: 12px; border: 1px solid #cbd5e1; background: #fff; color: #334155; }
+        .btn-submit { background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-submit:hover { background: #1d4ed8; }
+        .btn-correct { background: #16a34a; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-correct:hover { background: #15803d; }
+        .btn-incorrect { background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-incorrect:hover { background: #b91c1c; }
+        .eval-actions { display: flex; gap: 6px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Console de Supervision Métropolitaine</h1>
+        <p>Analyse cartographique en temps réel et validation des données d'apprentissage</p>
+    </div>
+
+    <div class="grid">
+        <div>
+            <div id="map"></div>
+        </div>
+
+        <div class="table-container">
+            <h3>Flux des Déclarations</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Visuel</th>
+                        <th>Détails Rapport</th>
+                        <th>Statut</th>
+                        <th>Action</th>
+                        <th>Précision IA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>
+                            <a href="/{{ report.image_path }}" target="_blank">
+                                <img src="/{{ report.image_path }}" class="report-img">
+                            </a>
+                        </td>
+                        <td>
+                            <span style="font-weight: 600; color: #1e293b;">{{ report.email }}</span><br>
+                            <span style="color: #64748b; font-size: 12px;">{{ report.description }}</span>
+                        </td>
+                        <td>
+                            {% if report.status == 'En attente' %}
+                            <span class="badge badge-waiting">En attente</span>
+                            {% elif report.status == 'En cours' %}
+                            <span class="badge badge-progress">En cours</span>
+                            {% else %}
+                            <span class="badge badge-resolved">Résolu</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="/update-status/{{ report.id }}" method="post" style="display:flex; gap:4px;">
+                                <select name="status">
+                                    <option value="En attente" {% if report.status == 'En attente' %}selected{% endif %}>En attente</option>
+                                    <option value="En cours" {% if report.status == 'En cours' %}selected{% endif %}>En cours</option>
+                                    <option value="Résolu" {% if report.status == 'Résolu' %}selected{% endif %}>Résolu</option>
+                                </select>
+                                <button type="submit" class="btn-submit">Valider</button>
+                            </form>
+                        </td>
+                        <td>
+                            {% if report.ai_evaluation == 'Non évalué' %}
+                            <div class="eval-actions">
+                                <form action="/evaluate-ai/{{ report.id }}" method="post">
+                                    <input type="hidden" name="evaluation" value="Correct">
+                                    <button type="submit" class="btn-correct">Conforme</button>
+                                </form>
+                                <form action="/evaluate-ai/{{ report.id }}" method="post">
+                                    <input type="hidden" name="evaluation" value="Incorrect">
+                                    <button type="submit" class="btn-incorrect">Erreur</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span class="badge {% if report.ai_evaluation == 'Correct' %}badge-eval-true{% else %}badge-eval-false{% endif %}">
+                                {% if report.ai_evaluation == 'Correct' %}Conforme{% else %}Erreur de détection{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+    
+    <script>
+        var map = L.map('map').setView([34.0208, -6.8416], 6);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        var heatPoints = [
+            {% for report in reports %}
+                {% if report.status != 'Résolu' %}
+                    [{{ report.latitude }}, {{ report.longitude }}, 0.8],
+                {% endif %}
+            {% endfor %}
+        ];
+
+        if (heatPoints.length > 0) {
+            var heat = L.heatLayer(heatPoints, {
+                radius: 25, 
+                blur: 15, 
+                maxZoom: 10,
+                gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+            }).addTo(map);
+        }
+    </script>
+</body>
+</html>
