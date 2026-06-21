@@ -1,6 +1,7 @@
-streamlit
-torch
-torchvision
-pillow
-numpy
-pandas
+fastapi
+uvicorn
+ultralytics
+python-multipart
+requests
+psycopg2-binary
+jinja2
